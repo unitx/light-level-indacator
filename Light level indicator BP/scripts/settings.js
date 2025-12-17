@@ -1,24 +1,24 @@
 export const defaultSettings={
-    "light_level_indicator:scale":1,                                // Scale of particles
-    "light_level_indicator:style":0,                                // Style of particles flat/facing
-    "light_level_indicator:horizontal_scan_distance":10,            // xz distance to calulate light levels
-    "light_level_indicator:vertical_scan_distance":4,               // y distance to calulate light levels                         
-    "light_level_indicator:y_offset":0.1,                           // Particle offset from block
+    "lightlevelindicator:scale":1,                                // Scale of particles
+    "lightlevelindicator:style":0,                                // Style of particles flat/facing
+    "lightlevelindicator:horizontal_scan_distance":10,            // xz distance to calulate light levels
+    "lightlevelindicator:vertical_scan_distance":4,               // y distance to calulate light levels                         
+    "lightlevelindicator:y_offset":0.1,                           // Particle offset from block
     
-    "light_level_indicator:update_interval":10,                     // Period between scans inwhich to update blocks (ticks)
-    "light_level_indicator:particle_interval":40,                   // Period between updates to the paricles (ticks)
-    "light_level_indicator:particle_lifetime":20,                   // Period between updates to the paricles (ticks)
-    "light_level_indicator:emitter_calulations":1,                  // Should ~2x processing power be used to get the correct light level colors? Without it the game displays the wrong colors between green/yellow sometimes
-    "light_level_indicator:emitter_update_interval":40,             // The rate to recalute emitter light producers
-    "light_level_indicator:emitter_extended_length":15,             // To calulate the correct overworld lighting the game calulates light emitted from blocks, horizontal_scan_distance+emitter_extended_length is that distance
+    "lightlevelindicator:update_interval":10,                     // Period between scans inwhich to update blocks (ticks)
+    "lightlevelindicator:particle_interval":40,                   // Period between updates to the paricles (ticks)
+    "lightlevelindicator:particle_lifetime":20,                   // Period between updates to the paricles (ticks)
+    "lightlevelindicator:emitter_calulations":1,                  // Should ~2x processing power be used to get the correct light level colors? Without it the game displays the wrong colors between green/yellow sometimes
+    "lightlevelindicator:emitter_update_interval":40,             // The rate to recalute emitter light producers
+    "lightlevelindicator:emitter_extended_length":15,             // To calulate the correct overworld lighting the game calulates light emitted from blocks, horizontal_scan_distance+emitter_extended_length is that distance
     
-    "light_level_indicator:color_dangrus":{red:1,green:0,blue:0},   // Color of spawnable blocks i.e. red (0-1 float)
-    "light_level_indicator:color_unsafe":{red:1,green:1,blue:0},    // Color of partial spawnable blocks i.e. yellow (0-1 float)
-    "light_level_indicator:color_safe":{red:0,green:1,blue:0},      // Color of non-spawnable blocks i.e. green (0-1 float)
+    "lightlevelindicator:color_dangerous":{red:1,green:0,blue:0},   // Color of spawnable blocks i.e. red (0-1 float)
+    "lightlevelindicator:color_unsafe":{red:1,green:1,blue:0},    // Color of partial spawnable blocks i.e. yellow (0-1 float)
+    "lightlevelindicator:color_safe":{red:0,green:1,blue:0},      // Color of non-spawnable blocks i.e. green (0-1 float)
    
-    "light_level_indicator:render_safe_blocks":1,                   // Enable/Disable rendering of safe blocks
-    "light_level_indicator:render_unsafe_blocks":1,                 // Enable/Disable rendering of unsafe blocks
-    "light_level_indicator:render_dangrus_blocks":1,                // Enable/Disable rendering of dangrus blocks
+    "lightlevelindicator:render_safe_blocks":1,                   // Enable/Disable rendering of safe blocks
+    "lightlevelindicator:render_unsafe_blocks":1,                 // Enable/Disable rendering of unsafe blocks
+    "lightlevelindicator:render_dangerous_blocks":1,                // Enable/Disable rendering of dangerous blocks
 }
 
 export const lightEmittingBlocks = {

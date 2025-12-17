@@ -19,5 +19,6 @@
     "license": "MIT",
     "product_type": "addon",
     "generated_with": {}
-  }
+  },
+  "capabilities": ["pbr"]
 }

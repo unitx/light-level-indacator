@@ -17,6 +17,10 @@ const playerStates=new Map();
 Mc.system.run(() => {
   updateSettings();
   preCalulations();
+  Mc.world.getDynamicPropertyIds().forEach(id => {
+    Mc.world.setDynamicProperty(id, undefined);
+  });
+  Mc.world.sendMessage("test")
 });
 
 // Update settings array to match saved dynamic property data
@@ -24,7 +28,7 @@ function updateSettings() {
     for (const key of Object.keys(settings)) {
         let value = Mc.world.getDynamicProperty(key);
         if(value===undefined) settings[key]=defaultSettings[key];
-        else if(key ==="light_level_indicator:color_dangrus" || key==="light_level_indicator:color_unsafe" || key==="light_level_indicator:color_safe"){
+        else if(key ==="lightlevelindicator:color_dangerous" || key==="lightlevelindicator:color_unsafe" || key==="lightlevelindicator:color_safe"){
           const values = value.split(","); settings[key] = { red: Number(values[0])/255, green: Number(values[1])/255, blue: Number(values[2])/255 };
         }
         else settings[key] = value;
@@ -41,7 +45,7 @@ function generatePoints(horizontal, vertical, step = 1) {
 }
 // Run pre-calulators to speed up phrasing and area calulations
 function preCalulations() {
-  shape = generatePoints(settings["light_level_indicator:horizontal_scan_distance"], settings["light_level_indicator:vertical_scan_distance"]);
+  shape = generatePoints(settings["lightlevelindicator:horizontal_scan_distance"], settings["lightlevelindicator:vertical_scan_distance"]);
 	for (let i = 1; i <= 15; i++) light_flood_fill[i] = generatePoints(i, i);
 	  shapeOffsets = Array.from(shape, s => {
 		const i1 = s.indexOf(",");
@@ -61,30 +65,30 @@ function preCalulations() {
 
 
 export const formConfig = [
-    { type:"label", label: "light_level_indicator.scan_distance_label" },
-    { type: "slider", label: "light_level_indicator.horizontal_scan_distance", key: "light_level_indicator:horizontal_scan_distance", tooltip: "light_level_indicator.horizontal_scan_distance.tooltip", min: 3, max: 50 },
-    { type: "slider", label: "light_level_indicator.vertical_scan_distance", key: "light_level_indicator:vertical_scan_distance", tooltip: "light_level_indicator.vertical_scan_distance.tooltip", min: 1, max: 20 },
-    { type: "toggle", label: "light_level_indicator.advanced.emitter_calulations", key: "light_level_indicator:emitter_calulations", tooltip: "light_level_indicator.advanced.emitter_calulations.tooltip", advanced: true },
-    { type: "slider", label: "light_level_indicator.advanced.emitter_extended_length", key: "light_level_indicator:emitter_extended_length", tooltip: "light_level_indicator.advanced.emitter_extended_length.tooltip", min: 1, max: 15, advanced: true },
+    { type:"label", label: "lightlevelindicator.scan_distance_label" },
+    { type: "slider", label: "lightlevelindicator.horizontal_scan_distance", key: "lightlevelindicator:horizontal_scan_distance", tooltip: "lightlevelindicator.horizontal_scan_distance.tooltip", min: 3, max: 50 },
+    { type: "slider", label: "lightlevelindicator.vertical_scan_distance", key: "lightlevelindicator:vertical_scan_distance", tooltip: "lightlevelindicator.vertical_scan_distance.tooltip", min: 1, max: 20 },
+    { type: "toggle", label: "lightlevelindicator.advanced.emitter_calulations", key: "lightlevelindicator:emitter_calulations", tooltip: "lightlevelindicator.advanced.emitter_calulations.tooltip", advanced: true },
+    { type: "slider", label: "lightlevelindicator.advanced.emitter_extended_length", key: "lightlevelindicator:emitter_extended_length", tooltip: "lightlevelindicator.advanced.emitter_extended_length.tooltip", min: 1, max: 15, advanced: true },
     { type:"divider"  },
 
-    { type:"label", label: "light_level_indicator.interval_label" },
-    { type: "slider", label: "light_level_indicator.update_interval", key: "light_level_indicator:update_interval", tooltip: "light_level_indicator.update_interval.tooltip", min: 1, max: 200 },
-    { type: "slider", label: "light_level_indicator.particle_interval", key: "light_level_indicator:particle_interval", tooltip: "light_level_indicator.particle_interval.tooltip", min: 1, max: 200 },
-    { type: "slider", label: "light_level_indicator.advanced.particle_lifetime", key: "light_level_indicator:particle_lifetime", tooltip: "light_level_indicator.advanced.particle_lifetime.tooltip", min: 1, max: 200, advanced: true },
-    { type: "slider", label: "light_level_indicator.advanced.emitter_update_interval", key: "light_level_indicator:emitter_update_interval", tooltip: "light_level_indicator.advanced.emitter_update_interval.tooltip", min: 1, max: 200, advanced: true },
+    { type:"label", label: "lightlevelindicator.interval_label" },
+    { type: "slider", label: "lightlevelindicator.update_interval", key: "lightlevelindicator:update_interval", tooltip: "lightlevelindicator.update_interval.tooltip", min: 1, max: 200 },
+    { type: "slider", label: "lightlevelindicator.particle_interval", key: "lightlevelindicator:particle_interval", tooltip: "lightlevelindicator.particle_interval.tooltip", min: 1, max: 200 },
+    { type: "slider", label: "lightlevelindicator.advanced.particle_lifetime", key: "lightlevelindicator:particle_lifetime", tooltip: "lightlevelindicator.advanced.particle_lifetime.tooltip", min: 1, max: 200, advanced: true },
+    { type: "slider", label: "lightlevelindicator.advanced.emitter_update_interval", key: "lightlevelindicator:emitter_update_interval", tooltip: "lightlevelindicator.advanced.emitter_update_interval.tooltip", min: 1, max: 200, advanced: true },
     { type:"divider"  },
 
-    { type:"label", label: "light_level_indicator.style_label" },
-    { type: "toggle", label: "light_level_indicator.style", key: "light_level_indicator:style", tooltip: "light_level_indicator.style.tooltip" },
-    { type: "text", label: "light_level_indicator.scale", key: "light_level_indicator:scale", tooltip: "light_level_indicator.scale.tooltip", min: 0.1, max: 3 },
-    { type: "text", label: "light_level_indicator.y_offset", key: "light_level_indicator:y_offset", tooltip: "light_level_indicator.y_offset.tooltip", min: -1, max: 1 },
-    { type: "toggle", label: "light_level_indicator.render_safe_blocks", key: "light_level_indicator:render_safe_blocks", tooltip: "light_level_indicator.render_safe_blocks.tooltip" },
-    { type: "toggle", label: "light_level_indicator.render_unsafe_blocks", key: "light_level_indicator:render_unsafe_blocks", tooltip: "light_level_indicator.render_unsafe_blocks.tooltip" },
-    { type: "toggle", label: "light_level_indicator.render_dangrus_blocks", key: "light_level_indicator:render_dangrus_blocks", tooltip: "light_level_indicator.render_dangrus_blocks.tooltip" },
-    { type: "color", label: "light_level_indicator.advanced.color_dangrus", key: "light_level_indicator:color_dangrus", tooltip: "light_level_indicator.advanced.color_dangrus.tooltip", advanced: true },
-    { type: "color", label: "light_level_indicator.advanced.color_unsafe", key: "light_level_indicator:color_unsafe", tooltip: "light_level_indicator.advanced.color_unsafe.tooltip", advanced: true },
-    { type: "color", label: "light_level_indicator.advanced.color_safe", key: "light_level_indicator:color_safe", tooltip: "light_level_indicator.advanced.color_safe.tooltip", advanced: true },
+    { type:"label", label: "lightlevelindicator.style_label" },
+    { type: "toggle", label: "lightlevelindicator.style", key: "lightlevelindicator:style", tooltip: "lightlevelindicator.style.tooltip" },
+    { type: "text", label: "lightlevelindicator.scale", key: "lightlevelindicator:scale", tooltip: "lightlevelindicator.scale.tooltip", min: 0.1, max: 3 },
+    { type: "text", label: "lightlevelindicator.y_offset", key: "lightlevelindicator:y_offset", tooltip: "lightlevelindicator.y_offset.tooltip", min: -1, max: 1 },
+    { type: "toggle", label: "lightlevelindicator.render_safe_blocks", key: "lightlevelindicator:render_safe_blocks", tooltip: "lightlevelindicator.render_safe_blocks.tooltip" },
+    { type: "toggle", label: "lightlevelindicator.render_unsafe_blocks", key: "lightlevelindicator:render_unsafe_blocks", tooltip: "lightlevelindicator.render_unsafe_blocks.tooltip" },
+    { type: "toggle", label: "lightlevelindicator.render_dangerous_blocks", key: "lightlevelindicator:render_dangerous_blocks", tooltip: "lightlevelindicator.render_dangerous_blocks.tooltip" },
+    { type: "color", label: "lightlevelindicator.advanced.color_dangerous", key: "lightlevelindicator:color_dangerous", tooltip: "lightlevelindicator.advanced.color_dangerous.tooltip", advanced: true },
+    { type: "color", label: "lightlevelindicator.advanced.color_unsafe", key: "lightlevelindicator:color_unsafe", tooltip: "lightlevelindicator.advanced.color_unsafe.tooltip", advanced: true },
+    { type: "color", label: "lightlevelindicator.advanced.color_safe", key: "lightlevelindicator:color_safe", tooltip: "lightlevelindicator.advanced.color_safe.tooltip", advanced: true },
 ];
 
 
@@ -111,9 +115,9 @@ function showSettingsForm(player, advancedMode, reset) {
                 const color = localSettings[field.key] ?? { red: 1, green: 1, blue: 1 };
                 form.divider();
                 form.label(label);
-                form.slider({ translate: "light_level_indicator.red_label" },0, 255,{ defaultValue: Math.floor(color.red * 255), tooltip });
-                form.slider({ translate: "light_level_indicator.green_label" },0, 255,{ defaultValue: Math.floor(color.green * 255) });
-                form.slider({ translate: "light_level_indicator.blue_label" },0, 255,{ defaultValue: Math.floor(color.blue * 255) });
+                form.slider({ translate: "lightlevelindicator.red_label" },0, 255,{ defaultValue: Math.floor(color.red * 255), tooltip });
+                form.slider({ translate: "lightlevelindicator.green_label" },0, 255,{ defaultValue: Math.floor(color.green * 255) });
+                form.slider({ translate: "lightlevelindicator.blue_label" },0, 255,{ defaultValue: Math.floor(color.blue * 255) });
                 break;
             case "divider":
                 form.divider();
@@ -154,7 +158,7 @@ function showSettingsForm(player, advancedMode, reset) {
             }
         }
         for (const [key, value] of Object.entries(settings)) {
-          if(key ==="light_level_indicator:color_dangrus" || key==="light_level_indicator:color_unsafe" || key==="light_level_indicator:color_safe"){
+          if(key ==="lightlevelindicator:color_dangerous" || key==="lightlevelindicator:color_unsafe" || key==="lightlevelindicator:color_safe"){
             const newValue = `${Math.floor(value.red*255)},${Math.floor(value.green*255)},${Math.floor(value.blue*255)}`;
             Mc.world.setDynamicProperty(key, newValue);
           }
@@ -173,7 +177,7 @@ function showSettingsForm(player, advancedMode, reset) {
 // Commands to toggle between light modes and to change settings
 Mc.system.beforeEvents.startup.subscribe((eventData) => {
     eventData.customCommandRegistry.registerCommand({
-        name: "light_level_indicator:toggle",
+        name: "lightlevelindicator:toggle",
         description: "Toggle the light level indicator to view light levels, sky light levels, and spawn spots.",
         permissionLevel: Mc.CommandPermissionLevel.Any,
         cheatsRequired: false,
@@ -185,21 +189,21 @@ Mc.system.beforeEvents.startup.subscribe((eventData) => {
         Mc.system.run(() => {
             if(!data.sourceEntity||data.sourceEntity.typeId!=="minecraft:player") return;
             if(parmas!==undefined && parmas===true){
-              if(data.sourceEntity.hasTag("light_level_indicator:show_sky_light_level")) data.sourceEntity.removeTag("light_level_indicator:show_sky_light_level");
-              else data.sourceEntity.addTag("light_level_indicator:show_sky_light_level");
+              if(data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level")) data.sourceEntity.removeTag("lightlevelindicator:show_sky_light_level");
+              else data.sourceEntity.addTag("lightlevelindicator:show_sky_light_level");
             }
             else{
-              if(data.sourceEntity.hasTag("light_level_indicator:show_light_level")) data.sourceEntity.removeTag("light_level_indicator:show_light_level");
-              else data.sourceEntity.addTag("light_level_indicator:show_light_level");
+              if(data.sourceEntity.hasTag("lightlevelindicator:show_light_level")) data.sourceEntity.removeTag("lightlevelindicator:show_light_level");
+              else data.sourceEntity.addTag("lightlevelindicator:show_light_level");
             }
               let state=playerStates.get(data.sourceEntity.id);
               if(!state){state=new LightLevelState(data.sourceEntity);playerStates.set(data.sourceEntity.id,state)};
-              state.indicator=data.sourceEntity.hasTag("light_level_indicator:show_light_level") ? data.sourceEntity.hasTag("light_level_indicator:show_sky_light_level") ? 2 : 0 : data.sourceEntity.hasTag("light_level_indicator:show_sky_light_level") ? 1 : 0;
+              state.indicator=data.sourceEntity.hasTag("lightlevelindicator:show_light_level") ? data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level") ? 2 : 0 : data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level") ? 1 : 0;
         })
     })
 
     eventData.customCommandRegistry.registerCommand({
-        name: "light_level_indicator:settings",
+        name: "lightlevelindicator:settings",
         description: "Adjust the settings of the light level indicator addon.",
         permissionLevel: Mc.CommandPermissionLevel.Admin,
         cheatsRequired: false,
@@ -231,7 +235,7 @@ class LightLevelState {
     this.validBlocks = [];
     this.lightSources = new Map();
     this.artificialLight = new Map();
-    this.indicator = this.player.hasTag("light_level_indicator:show_light_level") ? this.player.hasTag("light_level_indicator:show_sky_light_level") ? 2 : 0 : this.player.hasTag("light_level_indicator:show_sky_light_level") ? 1 : 0;
+    this.indicator = this.player.hasTag("lightlevelindicator:show_light_level") ? this.player.hasTag("lightlevelindicator:show_sky_light_level") ? 2 : 0 : this.player.hasTag("lightlevelindicator:show_sky_light_level") ? 1 : 0;
   }
   // Update block lighting infomation
   update(){
@@ -252,50 +256,50 @@ class LightLevelState {
       const key = `${block.x},${block.y},${block.z}`;
       let color = 0
       // Apply color rules to particles to indacate if mobs can spawn on a block
-      if (this.dimension.id === "minecraft:overworld" && settings["light_level_indicator:emitter_calulations"]===1 && this.sky_light===true) {
-        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_dangrus"]);color=2}
-        else if (this.artificialLight.has(key)) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_safe"]);color=0}
-        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_unsafe"]);color=1}
+      if (this.dimension.id === "minecraft:overworld" && settings["lightlevelindicator:emitter_calulations"]===1 && this.sky_light===true) {
+        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
+        else if (this.artificialLight.has(key)) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
+        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1}
       }
       else if (this.dimension.id === "minecraft:overworld"){
-        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_dangrus"]);color=2}
-        else if (block.light_level-block.sky_light_level>=1) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_safe"]);color=0}
-        else if (block.light_level >= 1 && block.sky_light_level<=7) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_unsafe"]);color=1}
+        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
+        else if (block.light_level-block.sky_light_level>=1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
+        else if (block.light_level >= 1 && block.sky_light_level<=7) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1}
       }
       else if(this.dimension.id === "minecraft:nether"){
-        if (block.light_level <= 11) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_dangrus"]);color=2}
-        else if (block.light_level > 11) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_safe"]);color=0}
+        if (block.light_level <= 11) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
+        else if (block.light_level > 11) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
       }
       else if(this.dimension.id === "minecraft:the_end"){
-        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_dangrus"]);color=2}
-        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["light_level_indicator:color_safe"]);color=0}
+        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
+        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
       }
       // Disable certain colors from rendering
-      if(color===0 && settings["light_level_indicator:render_safe_blocks"]===0) continue;
-      if(color===1 && settings["light_level_indicator:render_unsafe_blocks"]===0) continue;
-      if(color===2 && settings["light_level_indicator:render_dangrus_blocks"]===0) continue;
+      if(color===0 && settings["lightlevelindicator:render_safe_blocks"]===0) continue;
+      if(color===1 && settings["lightlevelindicator:render_unsafe_blocks"]===0) continue;
+      if(color===2 && settings["lightlevelindicator:render_dangerous_blocks"]===0) continue;
 
       // Apply additional particle adjustments and render particle to a specific player based on picked style
       if(this.indicator===0) molang.setFloat("variable.index", block.light_level);
       if(this.indicator===1) molang.setFloat("variable.index", block.sky_light_level);
-      molang.setFloat("variable.scale", settings["light_level_indicator:scale"]);
-      molang.setFloat("variable.life", settings["light_level_indicator:particle_lifetime"]/20);
-      const pos = {x: block.x + 0.5, y: block.y + settings["light_level_indicator:y_offset"], z: block.z + 0.5};
-      if(this.indicator===0) this.player.spawnParticle(settings["light_level_indicator:style"] === 0 ? "light_light_indicator:light_level" : "light_light_indicator:light_level_flat",pos, molang);
-      else if(this.indicator===1) this.player.spawnParticle(settings["light_level_indicator:style"] === 0 ? "light_light_indicator:sky_light_level" : "light_light_indicator:sky_light_level_flat",pos, molang);
+      molang.setFloat("variable.scale", settings["lightlevelindicator:scale"]);
+      molang.setFloat("variable.life", settings["lightlevelindicator:particle_lifetime"]/20);
+      const pos = {x: block.x + 0.5, y: block.y + settings["lightlevelindicator:y_offset"], z: block.z + 0.5};
+      if(this.indicator===0) this.player.spawnParticle(settings["lightlevelindicator:style"] === 0 ? "light_light_indicator:light_level" : "light_light_indicator:light_level_flat",pos, molang);
+      else if(this.indicator===1) this.player.spawnParticle(settings["lightlevelindicator:style"] === 0 ? "light_light_indicator:sky_light_level" : "light_light_indicator:sky_light_level_flat",pos, molang);
       else if(this.indicator===2){
         pos.z-=0.2;
           molang.setFloat("variable.index", block.light_level);
-          this.player.spawnParticle(settings["light_level_indicator:style"] === 0 ? "light_light_indicator:light_level" : "light_light_indicator:light_level_flat",pos, molang);
+          this.player.spawnParticle(settings["lightlevelindicator:style"] === 0 ? "light_light_indicator:light_level" : "light_light_indicator:light_level_flat",pos, molang);
           pos.z+=0.4;
           molang.setFloat("variable.index", block.sky_light_level);
-          this.player.spawnParticle(settings["light_level_indicator:style"] === 0 ? "light_light_indicator:sky_light_level" : "light_light_indicator:sky_light_level_flat",pos, molang);
+          this.player.spawnParticle(settings["lightlevelindicator:style"] === 0 ? "light_light_indicator:sky_light_level" : "light_light_indicator:sky_light_level_flat",pos, molang);
       }
     }
   }
 
   updateLightSources(center){
-    const maxDistance = settings["light_level_indicator:horizontal_scan_distance"] + settings["light_level_indicator:emitter_extended_length"];
+    const maxDistance = settings["lightlevelindicator:horizontal_scan_distance"] + settings["lightlevelindicator:emitter_extended_length"];
     const min = {x: center.x - maxDistance, y: center.y - maxDistance, z: center.z - maxDistance};
     const max = {x: center.x + maxDistance, y: center.y + maxDistance, z: center.z + maxDistance};
     if(min.y < this.hight_min) min.y = this.hight_min; if(max.y > this.hight_max) max.y = this.hight_max;
@@ -382,11 +386,11 @@ class LightLevelState {
 // During the specifiyed run interval update and render light levels specific players, at each specifyed interval
 Mc.system.runInterval(()=>{
   light_detector+=1; 
-    if(light_detector>=settings["light_level_indicator:update_interval"]) {
+    if(light_detector>=settings["lightlevelindicator:update_interval"]) {
       light_detector=0;
         players = [
-          ...Mc.world.getPlayers({ tags: ["light_level_indicator:show_light_level"] }),
-          ...Mc.world.getPlayers({ tags: ["light_level_indicator:show_sky_light_level"] })
+          ...Mc.world.getPlayers({ tags: ["lightlevelindicator:show_light_level"] }),
+          ...Mc.world.getPlayers({ tags: ["lightlevelindicator:show_sky_light_level"] })
         ];
         for(const player of players){
           let state=playerStates.get(player.id);
@@ -399,7 +403,7 @@ Mc.system.runInterval(()=>{
       }
     }
     light_render+=1; 
-  if(light_detector>=settings["light_level_indicator:particle_interval"]) {
+  if(light_detector>=settings["lightlevelindicator:particle_interval"]) {
     light_render=0;
       for(const player of players){
           let state=playerStates.get(player.id);
@@ -407,9 +411,9 @@ Mc.system.runInterval(()=>{
             state.render();
       }
   }
-  if(settings["light_level_indicator:emitter_calulations"]===1){
+  if(settings["lightlevelindicator:emitter_calulations"]===1){
     light_emitter+=1; 
-      if(light_emitter>=settings["light_level_indicator:emitter_update_interval"]) {
+      if(light_emitter>=settings["lightlevelindicator:emitter_update_interval"]) {
         light_emitter=0;
         for(const player of players){
           let state=playerStates.get(player.id);

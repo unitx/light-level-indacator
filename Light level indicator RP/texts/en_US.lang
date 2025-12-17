@@ -34,8 +34,8 @@ light_level_indicator.render_safe_blocks.tooltip=Enables/disables rendering of s
 light_level_indicator.render_unsafe_blocks=Render unsafe blocks
 light_level_indicator.render_unsafe_blocks.tooltip=Enables/disables rendering of unsafe blocks
 
-light_level_indicator.render_dangrus_blocks=Render dangerous blocks
-light_level_indicator.render_dangrus_blocks.tooltip=Enables/disables rendering of dangerous blocks
+light_level_indicator.render_dangerous_blocks=Render dangerous blocks
+light_level_indicator.render_dangerous_blocks.tooltip=Enables/disables rendering of dangerous blocks
 
 light_level_indicator.advanced.particle_lifetime=Particle lifetime (ticks)
 light_level_indicator.advanced.particle_lifetime.tooltip=Length of time that particles exist in world.
@@ -49,8 +49,8 @@ light_level_indicator.advanced.emitter_update_interval.tooltip=(If emitter calcu
 light_level_indicator.advanced.emitter_extended_length=Emitter extended length
 light_level_indicator.advanced.emitter_extended_length.tooltip=(If emitter calculations are enabled) a distanced factor needed to correct for edge cases.
 
-light_level_indicator.advanced.color_dangrus=§lDanger color (rgba)
-light_level_indicator.advanced.color_dangrus.tooltip=Text color of dangerous blocks (rgba).
+light_level_indicator.advanced.color_dangerous=§lDanger color (rgba)
+light_level_indicator.advanced.color_dangerous.tooltip=Text color of dangerous blocks (rgba).
 
 light_level_indicator.advanced.color_unsafe=§lUnsafe color (rgba)
 light_level_indicator.advanced.color_unsafe.tooltip=Text color of unsafe blocks (rgba).
