@@ -2,7 +2,7 @@ import * as Mc from "@minecraft/server";
 import * as Ui from "@minecraft/server-ui";
 import { defaultSettings, lightEmittingBlocks, transparentBlocks } from "./settings.js";
 // Define global variables
-let settings = { ...defaultSettings };
+let settings = JSON.parse(JSON.stringify(defaultSettings));
 let light_detector = 0; let light_emitter = 0; let light_render = 0; let players=[];
 let shape, shapeOffsets;
 const light_flood_fill = {};
@@ -17,10 +17,6 @@ const playerStates=new Map();
 Mc.system.run(() => {
   updateSettings();
   preCalulations();
-  Mc.world.getDynamicPropertyIds().forEach(id => {
-    Mc.world.setDynamicProperty(id, undefined);
-  });
-  Mc.world.sendMessage("test")
 });
 
 // Update settings array to match saved dynamic property data
@@ -28,8 +24,9 @@ function updateSettings() {
     for (const key of Object.keys(settings)) {
         let value = Mc.world.getDynamicProperty(key);
         if(value===undefined) settings[key]=defaultSettings[key];
-        else if(key ==="lightlevelindicator:color_dangerous" || key==="lightlevelindicator:color_unsafe" || key==="lightlevelindicator:color_safe"){
-          const values = value.split(","); settings[key] = { red: Number(values[0])/255, green: Number(values[1])/255, blue: Number(values[2])/255 };
+        else if((key ==="lightlevelindicator:color_dangerous" || key==="lightlevelindicator:color_unsafe" || key==="lightlevelindicator:color_safe") && typeof value === "string"){
+          const values = value.split(","); 
+          settings[key] = { red: Number(values[0])/255, green: Number(values[1])/255, blue: Number(values[2])/255 };
         }
         else settings[key] = value;
     }
@@ -62,8 +59,7 @@ function preCalulations() {
 	}
 }
 
-
-
+// Settings menu config for the addon
 export const formConfig = [
     { type:"label", label: "lightlevelindicator.scan_distance_label" },
     { type: "slider", label: "lightlevelindicator.horizontal_scan_distance", key: "lightlevelindicator:horizontal_scan_distance", tooltip: "lightlevelindicator.horizontal_scan_distance.tooltip", min: 3, max: 50 },
@@ -91,102 +87,100 @@ export const formConfig = [
     { type: "color", label: "lightlevelindicator.advanced.color_safe", key: "lightlevelindicator:color_safe", tooltip: "lightlevelindicator.advanced.color_safe.tooltip", advanced: true },
 ];
 
-
+// Show setting to player, and using returned reset store saved settings
 function showSettingsForm(player, advancedMode, reset) {
-  let localSettings 
-  if(reset) localSettings= { ...defaultSettings };
-  else localSettings= { ...settings };
+  // Setup variables and copy needed variables
   const form = new Ui.ModalFormData();
-  let visibleFields = [...formConfig.filter(f => !f.advanced || advancedMode)];
-       for (const field of visibleFields) {
-        const label = { translate: field.label };
-        const tooltip = field.tooltip ? { translate: field.tooltip } : undefined;
+  let localSettings 
+  if(reset) localSettings = JSON.parse(JSON.stringify(defaultSettings));
+  else localSettings = settings;
+  let visibleFields = JSON.parse(JSON.stringify(formConfig));
+  if(!advancedMode) visibleFields=visibleFields.filter(f => !f.advanced)
+  // Loop through settings array and setup form menu
+  for (const field of visibleFields) {
+    const label = { translate: field.label };
+    const tooltip = field.tooltip ? { translate: field.tooltip } : undefined;
+    switch (field.type) {
+        case "text":
+            form.textField(label,"",{ defaultValue: localSettings[field.key].toString(), tooltip });
+            break;
+        case "toggle":
+            form.toggle(label,{ defaultValue: Boolean(localSettings[field.key]), tooltip });
+            break;
+        case "slider":
+            form.slider(label,field.min,field.max,{ defaultValue: localSettings[field.key], tooltip, valueStep: 1 });
+            break;
+        case "color":
+            const color = localSettings[field.key] ?? { red: 1, green: 1, blue: 1 };
+            form.divider();
+            form.label(label);
+            form.slider({ translate: "lightlevelindicator.red_label" },0, 255,{ defaultValue: Math.floor(color.red * 255), tooltip });
+            form.slider({ translate: "lightlevelindicator.green_label" },0, 255,{ defaultValue: Math.floor(color.green * 255) });
+            form.slider({ translate: "lightlevelindicator.blue_label" },0, 255,{ defaultValue: Math.floor(color.blue * 255) });
+            break;
+        case "divider":
+            form.divider();
+            break;
+        case "label":
+            form.label(label);
+            break;
+    }
+  }
+  // Show form to player then save respone to settings object
+  form.show(player).then(response => {
+    if(response.canceled) return;
+    let formIdx = 0;
+    for (const field of visibleFields) {
         switch (field.type) {
             case "text":
-                form.textField(label,"",{ defaultValue: localSettings[field.key].toString(), tooltip });
+            case "slider":
+                const val = Number(response.formValues[formIdx++]);
+                if (!isNaN(val)) settings[field.key] = val;
                 break;
             case "toggle":
-                form.toggle(label,{ defaultValue: Boolean(localSettings[field.key]), tooltip });
-                break;
-            case "slider":
-                form.slider(label,field.min,field.max,{ defaultValue: localSettings[field.key], tooltip, valueStep: 1 });
+                settings[field.key] = response.formValues[formIdx++] ? 1 : 0;
                 break;
             case "color":
-                const color = localSettings[field.key] ?? { red: 1, green: 1, blue: 1 };
-                form.divider();
-                form.label(label);
-                form.slider({ translate: "lightlevelindicator.red_label" },0, 255,{ defaultValue: Math.floor(color.red * 255), tooltip });
-                form.slider({ translate: "lightlevelindicator.green_label" },0, 255,{ defaultValue: Math.floor(color.green * 255) });
-                form.slider({ translate: "lightlevelindicator.blue_label" },0, 255,{ defaultValue: Math.floor(color.blue * 255) });
+                formIdx+=2;
+                settings[field.key].red = Number(response.formValues[formIdx++] / 255);
+                settings[field.key].green = Number(response.formValues[formIdx++] / 255);
+                settings[field.key].blue = Number(response.formValues[formIdx++] / 255);
                 break;
             case "divider":
-                form.divider();
-                break;
             case "label":
-                form.label(label);
-                break;
+              formIdx++;
+              break;
         }
     }
-    form.show(player).then(response => {
-        let idx = 0;
-        for (const field of visibleFields) {
-            switch (field.type) {
-                case "text": {
-                    const v = response.formValues[idx++];
-                    const n = Number(v);
-                    if (!isNaN(n)) settings[field.key] = n;
-                    break;
-                }
-                case "color":
-                    idx+=2;
-                    settings[field.key].red = response.formValues[idx++] / 255;
-                    settings[field.key].green = response.formValues[idx++] / 255;
-                    settings[field.key].blue = response.formValues[idx++] / 255;
-                  break;
-                case "toggle":
-                    settings[field.key] = response.formValues[idx++] ? 1 : 0;
-                    break;
-                case "slider":
-                    settings[field.key] = response.formValues[idx++];
-                    break;
-                case "divider":
-                  idx++;
-                    break;
-                case "label":
-                  idx++;
-                  break;
-            }
-        }
-        for (const [key, value] of Object.entries(settings)) {
-          if(key ==="lightlevelindicator:color_dangerous" || key==="lightlevelindicator:color_unsafe" || key==="lightlevelindicator:color_safe"){
-            const newValue = `${Math.floor(value.red*255)},${Math.floor(value.green*255)},${Math.floor(value.blue*255)}`;
-            Mc.world.setDynamicProperty(key, newValue);
-          }
-          else Mc.world.setDynamicProperty(key, value);
-        }
-        preCalulations();
-    });
+    // Save settings to local settings object and to dynamic propertys for global save
+    settings=localSettings;
+    for (const [key, value] of Object.entries(settings)) {
+      if(key ==="lightlevelindicator:color_dangerous" || key==="lightlevelindicator:color_unsafe" || key==="lightlevelindicator:color_safe"){
+        const newValue = `${Math.floor(value.red*255)},${Math.floor(value.green*255)},${Math.floor(value.blue*255)}`;
+        Mc.world.setDynamicProperty(key, newValue);
+      }
+      else Mc.world.setDynamicProperty(key, value);
+    }
+    // Redo inital calulations with new settings
+    preCalulations();
+  });
 }
-
-
-
-
-
-
 
 // Commands to toggle between light modes and to change settings
 Mc.system.beforeEvents.startup.subscribe((eventData) => {
+    // Toggle command
     eventData.customCommandRegistry.registerCommand({
         name: "lightlevelindicator:toggle",
         description: "Toggle the light level indicator to view light levels, sky light levels, and spawn spots.",
         permissionLevel: Mc.CommandPermissionLevel.Any,
         cheatsRequired: false,
         optionalParameters: [
-            { type: Mc.CustomCommandParamType.Boolean, name: "Sky light level" },
+            { type: Mc.CustomCommandParamType.Boolean, name: "skyLightLevel" },
         ]
     },
     (data, parmas) => {
         Mc.system.run(() => {
+            // Toggle players tags depending on command and arguments
             if(!data.sourceEntity||data.sourceEntity.typeId!=="minecraft:player") return;
             if(parmas!==undefined && parmas===true){
               if(data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level")) data.sourceEntity.removeTag("lightlevelindicator:show_sky_light_level");
@@ -196,24 +190,26 @@ Mc.system.beforeEvents.startup.subscribe((eventData) => {
               if(data.sourceEntity.hasTag("lightlevelindicator:show_light_level")) data.sourceEntity.removeTag("lightlevelindicator:show_light_level");
               else data.sourceEntity.addTag("lightlevelindicator:show_light_level");
             }
-              let state=playerStates.get(data.sourceEntity.id);
-              if(!state){state=new LightLevelState(data.sourceEntity);playerStates.set(data.sourceEntity.id,state)};
-              state.indicator=data.sourceEntity.hasTag("lightlevelindicator:show_light_level") ? data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level") ? 2 : 0 : data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level") ? 1 : 0;
+            // Add player to LightLevelState class if they are not already
+            let state=playerStates.get(data.sourceEntity.id);
+            if(!state){state=new LightLevelState(data.sourceEntity);playerStates.set(data.sourceEntity.id,state)};
+            state.indicator=data.sourceEntity.hasTag("lightlevelindicator:show_light_level") ? data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level") ? 2 : 0 : data.sourceEntity.hasTag("lightlevelindicator:show_sky_light_level") ? 1 : 0;
         })
     })
-
+    // Settings command
     eventData.customCommandRegistry.registerCommand({
         name: "lightlevelindicator:settings",
         description: "Adjust the settings of the light level indicator addon.",
         permissionLevel: Mc.CommandPermissionLevel.Admin,
         cheatsRequired: false,
         optionalParameters: [
-            { type: Mc.CustomCommandParamType.Boolean, name: "Advanced settings" },
-            { type: Mc.CustomCommandParamType.Boolean, name: "Reset settings" },
+            { type: Mc.CustomCommandParamType.Boolean, name: "advancedSettings" },
+            { type: Mc.CustomCommandParamType.Boolean, name: "resetSettings" },
         ]
     },
     (data,advanced,reset) => {
         Mc.system.run(() => {
+            // Show settings to player with additional options
             if(!data.sourceEntity||data.sourceEntity.typeId!=="minecraft:player") return;
             if(advanced===undefined) advanced=false; if(reset===undefined) reset=false;
             showSettingsForm(data.sourceEntity, advanced, reset);
@@ -239,14 +235,11 @@ class LightLevelState {
   }
   // Update block lighting infomation
   update(){
-    this.dimension = this.player.dimension;
-    this.hight_min=this.dimension.heightRange.min+1
-    this.hight_max=this.dimension.heightRange.max-1
     this.validBlocks = this.findValidBlocks(shapeOffsets, this.dimension, this.location);
   }
   // Update emitter block lighting infomation
   updateEmitter(){
-    if(this.dimension.id==="minecraft:overworld" && this.sky_light===true) this.updateLightSources(this.location);
+    if(this.dimension.id==="minecraft:overworld" && this.sky_light===true && settings["lightlevelindicator:emitter_calulations"]===1) this.updateLightSources(this.location);
     //Mc.world.sendMessage(`${this.artificialLight.size} ${this.lightSources.size}`)
   }
   // Render particle on all blocks which are valid solid blocks
@@ -257,22 +250,23 @@ class LightLevelState {
       let color = 0
       // Apply color rules to particles to indacate if mobs can spawn on a block
       if (this.dimension.id === "minecraft:overworld" && settings["lightlevelindicator:emitter_calulations"]===1 && this.sky_light===true) {
-        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
-        else if (this.artificialLight.has(key)) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
-        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1}
+        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2;}
+        else if (this.artificialLight.has(key)) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0;}
+        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1;}
       }
       else if (this.dimension.id === "minecraft:overworld"){
-        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
-        else if (block.light_level-block.sky_light_level>=1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
-        else if (block.light_level >= 1 && block.sky_light_level<=7) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1}
+        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2;}
+        else if (block.light_level-block.sky_light_level>=1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0;}
+        else if (block.light_level >= 1 && block.sky_light_level<=7) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1;}
+        else {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_unsafe"]);color=1;}
       }
       else if(this.dimension.id === "minecraft:nether"){
-        if (block.light_level <= 11) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
-        else if (block.light_level > 11) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
+        if (block.light_level <= 11) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2;}
+        else if (block.light_level > 11) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0;}
       }
       else if(this.dimension.id === "minecraft:the_end"){
-        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2}
-        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0}
+        if (block.light_level === 0) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_dangerous"]);color=2;}
+        else if (block.light_level >= 1) {molang.setColorRGB("variable.color", settings["lightlevelindicator:color_safe"]);color=0;}
       }
       // Disable certain colors from rendering
       if(color===0 && settings["lightlevelindicator:render_safe_blocks"]===0) continue;
@@ -299,18 +293,33 @@ class LightLevelState {
   }
 
   updateLightSources(center){
+    let blocks
     const maxDistance = settings["lightlevelindicator:horizontal_scan_distance"] + settings["lightlevelindicator:emitter_extended_length"];
     const min = {x: center.x - maxDistance, y: center.y - maxDistance, z: center.z - maxDistance};
     const max = {x: center.x + maxDistance, y: center.y + maxDistance, z: center.z + maxDistance};
-    if(min.y < this.hight_min) min.y = this.hight_min; if(max.y > this.hight_max) max.y = this.hight_max;
-    const blocks = this.dimension.getBlocks(new Mc.BlockVolume(min,max), {includeTypes: lightBlockIds});
+    if(min.y < this.hight_min) min.y = this.hight_min; 
+    if(max.y > this.hight_max) max.y = this.hight_max;
+    try{blocks = this.dimension.getBlocks(new Mc.BlockVolume(min,max), {includeTypes: lightBlockIds},true);}catch(e){return;}
 
     const newSources = new Map();
     for(const loc of blocks.getBlockLocationIterator()){
       const key = `${loc.x},${loc.y},${loc.z}`;
       const block = this.dimension.getBlock(loc);
       if(!block) continue;
-      const level = lightEmittingBlocks[block.typeId];
+      let level;
+
+      const data = lightEmittingBlocks[block.typeId];
+      if (data !== undefined) {
+        if (typeof data !== "object") level = data;
+        else {
+          const blockStates = block.permutation.getAllStates();
+          for(const [key,value] of Object.entries(data)){
+            let match = true;
+            for(let k in value) if(!(k in blockStates) || value[k] !== blockStates[k]) { match = false; break; }
+            if(match) { level = parseInt(key); break; }
+          }
+        }
+      }
       if(!level || !light_flood_fill[level]) continue;
       newSources.set(key, {loc, level});
     }
@@ -375,7 +384,20 @@ class LightLevelState {
       // If conditions passed find light levels and push data to array
       const sky = airBlock.getSkyLightLevel();
       if (!this.sky_light && sky > 0) this.sky_light = true;
-      validBlocks.push({x, y, z,light_level: Math.max(airBlock.getLightLevel(), lightEmittingBlocks[belowBlock.typeId] ?? 0),sky_light_level: sky});
+      let level = 0;
+      const data = lightEmittingBlocks[belowBlock.typeId];
+      if (data !== undefined) {
+        if (typeof data !== "object") level = data;
+        else {
+          const blockStates = belowBlock.permutation.getAllStates();
+          for(const [key,value] of Object.entries(data)){
+            let match = true;
+            for(let k in value) if(!(k in blockStates) || value[k] !== blockStates[k]) { match = false; break; }
+            if(match) { level = parseInt(key); break; }
+          }
+        }
+      }
+      validBlocks.push({x, y, z,light_level: Math.max(airBlock.getLightLevel(), level),sky_light_level: sky});
     }
     return validBlocks;
 }
@@ -385,34 +407,39 @@ class LightLevelState {
 
 // During the specifiyed run interval update and render light levels specific players, at each specifyed interval
 Mc.system.runInterval(()=>{
-  light_detector+=1; 
-    if(light_detector>=settings["lightlevelindicator:update_interval"]) {
-      light_detector=0;
-        players = [
-          ...Mc.world.getPlayers({ tags: ["lightlevelindicator:show_light_level"] }),
-          ...Mc.world.getPlayers({ tags: ["lightlevelindicator:show_sky_light_level"] })
-        ];
-        for(const player of players){
-          let state=playerStates.get(player.id);
-            if(!state){state=new LightLevelState(player);playerStates.set(player.id,state)};
-            const loc=player.location;
-            loc.x=Math.floor(loc.x);loc.y=Math.floor(loc.y);loc.z=Math.floor(loc.z);
-            state.location=loc;
-            state.update();
-            state.render();
-      }
-    }
-    light_render+=1; 
-  if(light_detector>=settings["lightlevelindicator:particle_interval"]) {
-    light_render=0;
+  light_detector++; 
+  // Update light levels, timer
+  if(light_detector>=settings["lightlevelindicator:update_interval"]) {
+    light_detector=0;
+      // Every new scan get all players who light levels will be showed to
+      players = [
+        ...Mc.world.getPlayers({ tags: ["lightlevelindicator:show_light_level"] }),
+        ...Mc.world.getPlayers({ tags: ["lightlevelindicator:show_sky_light_level"] })
+      ];
+      // For every player add them to the LightLevelState class if they are not already and update light levels
       for(const player of players){
-          let state=playerStates.get(player.id);
-            if(!state){state=new LightLevelState(player);playerStates.set(player.id,state)};
-            state.render();
-      }
+        let state=playerStates.get(player.id);
+          if(!state){state=new LightLevelState(player);playerStates.set(player.id,state)};
+          const loc=player.location;
+          loc.x=Math.floor(loc.x);loc.y=Math.floor(loc.y);loc.z=Math.floor(loc.z);
+          state.location=loc;
+          state.update();
+          //state.render();
+    }
   }
+  light_render++; 
+  // Render particles, timer
+  if(light_render>=settings["lightlevelindicator:particle_interval"]) {
+    light_render=0;
+    for(const player of players){
+        let state=playerStates.get(player.id);
+          if(!state){state=new LightLevelState(player);playerStates.set(player.id,state)};
+          state.render();
+    }
+  }
+  // Update emitter blocks, timer
   if(settings["lightlevelindicator:emitter_calulations"]===1){
-    light_emitter+=1; 
+    light_emitter++; 
       if(light_emitter>=settings["lightlevelindicator:emitter_update_interval"]) {
         light_emitter=0;
         for(const player of players){
@@ -437,3 +464,12 @@ Mc.world.afterEvents.playerBreakBlock.subscribe((eventData)=>{
   state.updateEmitter();
   state.update();
 },{blockTypes:lightBlockIds})
+
+// For dimension changes track dimension changes and dimension hight changes using playerDimensionChange event
+Mc.world.afterEvents.playerDimensionChange.subscribe((eventData)=>{
+  let state=playerStates.get(eventData.player.id);
+  if(!state) return;
+  state.dimension=eventData.player.dimension;
+  state.hight_min=state.dimension.heightRange.min+1;
+  state.hight_max=state.dimension.heightRange.max-1;
+})
